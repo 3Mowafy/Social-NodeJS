@@ -6,6 +6,10 @@ const postSchema = mongoose.Schema(
             type: String,
             trim: true,
         },
+        imgId: {
+            type: String,
+            trim: true,
+        },
         title: {
             type: String,
             trim: true,

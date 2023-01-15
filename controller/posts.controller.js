@@ -9,6 +9,7 @@ class Post {
             if (req.file) {
                 const result = await cloudinary.uploader.upload(req.file.path);
                 postData.postImg = result.secure_url;
+                postData.imgId = result.public_id;
             }
 
             await postData.save();
@@ -34,9 +35,14 @@ class Post {
             for (let key of postKeys) {
                 postData[key] = req.body[key];
             }
-            const result = await cloudinary.uploader.upload(req.file.path);
-            postData.postImg = req.file ? result.secure_url : postData.postImg;
-
+            if (req.file) {
+                const result = await cloudinary.uploader.upload(req.file.path);
+                postData.postImg =
+                    (cloudinary.uploader.destroy(postData.imgId) &&
+                        result.secure_url) ||
+                    postData.postImg;
+                postData.imgId = result.public_id || postData.imgId;
+            }
             await postData.save();
             res.status(200).send({
                 apiStatus: true,
@@ -54,8 +60,9 @@ class Post {
 
     static removePost = async (req, res) => {
         try {
-            const postData = await postModel.findByIdAndDelete(req.params.id);
-
+            const postData = await postModel.findById(req.params.id);
+            cloudinary.uploader.destroy(postData.imgId);
+            await postData.remove();
             res.status(200).send({
                 apiStatus: true,
                 data: "",
