@@ -1,12 +1,16 @@
 const postModel = require("../models/posts.model");
+const cloudinary = require("../helper/cloudinary.helper");
 
 class Post {
     static addPost = async (req, res) => {
         try {
             const postData = new postModel(req.body);
+
             if (req.file) {
-                postData.postImg = req.file.path.replace("public\\", "");
+                const result = await cloudinary.uploader.upload(req.file.path);
+                postData.postImg = result.secure_url;
             }
+
             await postData.save();
             res.status(200).send({
                 apiStatus: true,
@@ -30,10 +34,8 @@ class Post {
             for (let key of postKeys) {
                 postData[key] = req.body[key];
             }
-
-            postData.postImg = req.file
-                ? req.file.path.replace("public\\", "")
-                : postData.postImg;
+            const result = await cloudinary.uploader.upload(req.file.path);
+            postData.postImg = req.file ? result.secure_url : postData.postImg;
 
             await postData.save();
             res.status(200).send({
