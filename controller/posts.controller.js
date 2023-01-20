@@ -61,7 +61,11 @@ class Post {
     static removePost = async (req, res) => {
         try {
             const postData = await postModel.findById(req.params.id);
-            cloudinary.uploader.destroy(postData.imgId);
+
+            if (req.file) {
+                cloudinary.uploader.destroy(postData.imgId);
+            }
+
             await postData.remove();
             res.status(200).send({
                 apiStatus: true,
